@@ -43,6 +43,8 @@ class Frontend_Uploader {
 	public $settings;
 	public $ugc_mimes;
 	public $settings_slug;
+	private $field_scopes = array();
+	private $registered_request_fields = array();
 
 	/**
 	 *  Load languages and a bit of paranoia
@@ -63,6 +65,13 @@ class Frontend_Uploader {
 				unset( $this->allowed_mime_types[$key] );
 			}
 		}
+
+		// Handle generic and special use cases
+		$this->field_scopes = array(
+			'content' => array( 'post_title', 'post_content', 'photo', 'media', 'caption' ),
+			'meta_preset' => array( 'post_author', 'post_credit' ),
+		);
+
 	}
 
 	/**
@@ -134,6 +143,7 @@ class Frontend_Uploader {
 		$this->html = new Html_Helper;
 		$this->settings = get_option( $this->settings_slug, $this->settings_defaults() );
 		register_activation_hook( __FILE__, array( $this, 'activate_plugin' ) );
+
 	}
 
 	/**
@@ -477,6 +487,7 @@ class Frontend_Uploader {
 					'multiple' => 'false',
 					'wysiwyg_enabled' => false,
 				), $atts ) );
+
 		switch ( $tag ):
 		case 'textarea':
 			if ( 'on' == $this->settings['wysiwyg_enabled'] || $wysiwyg_enabled == true ) {
@@ -543,6 +554,7 @@ class Frontend_Uploader {
 					'success_page' => '',
 					'form_layout' => '',
 					'post_id' => get_the_ID(),
+					'post_type' => 'post',
 				), $atts ) );
 		$post_id = (int) $post_id;
 
@@ -592,6 +604,7 @@ class Frontend_Uploader {
 			echo do_shortcode ( '[input type="text" name="post_credit" id="ug_post_credit" description="' . __( 'Credit', 'frontend-uploader' ) . '" class=""]' );
 
 		echo do_shortcode ( '[input type="submit" class="btn" value="'. $submit_button .'"]' );
+		var_dump( $this->current_fields_map );
 		endif; ?>
 		  <input type="hidden" name="action" value="upload_ugpost" />
 		  <input type="hidden" value="<?php echo $post_id ?>" name="post_ID" />
